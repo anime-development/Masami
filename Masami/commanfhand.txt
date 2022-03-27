@@ -1,0 +1,12 @@
+﻿public static async void Run(DiscordSocketClient client, SocketMessage message, params string[] args)
+        {
+            try
+            {
+               //code
+
+            } 
+            catch (Exception err)
+            {
+                Console.WriteLine(err);
+            }
+        }

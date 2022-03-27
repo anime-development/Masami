@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
+using Discord.Commands;
 
 namespace Masami
 {
@@ -29,9 +30,41 @@ namespace Masami
             masami.Ready += async () =>
             {
                 await masami.SetGameAsync($"m.help");
-                await masami.SetStatusAsync(UserStatus.AFK);
+                await masami.SetStatusAsync(UserStatus.DoNotDisturb);
                 Console.WriteLine("test");
                 Console.WriteLine("Ready");
+            };
+
+            masami.MessageReceived += async (message) =>
+            {
+                if (message.Author.IsBot) return;
+                if (!message.Content.StartsWith(prefix)) return;
+
+                string[] args = message.Content.Replace(prefix, "").Trim().Split(" ");
+
+                string command = args[0];
+
+                if(command != "bye") await message.Channel.TriggerTypingAsync();
+
+                await Task.Delay(5000);
+
+                switch (command)
+                {
+                    case "hello":
+                        Commands.hello.Run(masami, message, args);
+
+                        break;
+                    case "embed":
+
+                       Commands.embed.Run(masami, message, args);
+
+                        break;
+                    case "bye":
+                        Commands.bye.Run(masami, message, args);
+                        
+
+                        break;
+                };
             };
 
             await masami.LoginAsync(TokenType.Bot, Environment.GetEnvironmentVariable("TOKEN"));
