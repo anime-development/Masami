@@ -6,87 +6,76 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using Discord.Commands;
+using MongoDB.Driver;
+using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Bson;
+using Microsoft.Extensions.DependencyInjection;
+using System.Reflection;
+using Masami.Database;
+using Masami.Events;
+using Masami.Utils;
 
 namespace Masami
 {
-   class Masami
+    public class Masami
     {
-        public static void Main(string[] args) => new Masami().MainAsync().GetAwaiter().GetResult();
+        private DiscordSocketClient masami = null;
+        private IServiceProvider _services = null;
+        private CommandService _commandService = null;
+        private MongoCRUD _db = null;
 
-        public static DiscordSocketClient? masami;
-
-        public static string prefix = "m.";
-
-
-        
-
+        public static void Main(string[] args)
+            => new Masami().MainAsync().GetAwaiter().GetResult();
 
         public async Task MainAsync()
         {
-           
-            LoadENV();
-            
-            masami = new DiscordSocketClient();
-            masami.Ready += async () =>
+            Console.Title = "Masami Bot";
+            Console.BackgroundColor = ConsoleColor.Green;
+            Console.ForegroundColor = ConsoleColor.White;
+
+            BotConfig.Load();
+
+            masami = new DiscordSocketClient(new DiscordSocketConfig()
             {
-                await masami.SetGameAsync($"m.help");
-                await masami.SetStatusAsync(UserStatus.DoNotDisturb);
-                Console.WriteLine("test");
-                Console.WriteLine("Ready");
-            };
-
-            masami.MessageReceived += async (message) =>
+                GatewayIntents = GatewayIntents.AllUnprivileged,
+                DefaultRetryMode = RetryMode.AlwaysRetry,
+                LogLevel = LogSeverity.Info,
+                AlwaysDownloadUsers = true
+            });
+            _commandService = new CommandService(new CommandServiceConfig()
             {
-                if (message.Author.IsBot) return;
-                if (!message.Content.StartsWith(prefix)) return;
+                CaseSensitiveCommands = false,
+                DefaultRunMode = RunMode.Sync
+            });
+            _db = new MongoCRUD("masami");
 
-                string[] args = message.Content.Replace(prefix, "").Trim().Split(" ");
+            var collection = new ServiceCollection()
+                .AddSingleton(masami)
+                .AddSingleton(_commandService)
+                .AddSingleton(_db)
+                .AddSingleton<DiscordMessageEvent>()
+                .AddSingleton<DiscordReadyEvent>();
 
-                string command = args[0];
+            _services = collection.BuildServiceProvider();
 
-                if(command != "bye") await message.Channel.TriggerTypingAsync();
-
-                await Task.Delay(5000);
-
-                switch (command)
-                {
-                    case "hello":
-                        Commands.hello.Run(masami, message, args);
-
-                        break;
-                    case "embed":
-
-                       Commands.embed.Run(masami, message, args);
-
-                        break;
-                    case "bye":
-                        Commands.bye.Run(masami, message, args);
-                        
-
-                        break;
-                };
-            };
-
-            await masami.LoginAsync(TokenType.Bot, Environment.GetEnvironmentVariable("TOKEN"));
-            await masami.StartAsync();
-            
-            await Task.Delay(Timeout.Infinite);
-        }  
-        public static void LoadENV()
-        {
-            if (!File.Exists("./.env")) return;
-
-            foreach (var line in File.ReadAllLines("./.env"))
+            // Auto-Load events, etc...
+            foreach (ServiceDescriptor service in collection)
             {
-                var parts = line.Split('=', (char)StringSplitOptions.RemoveEmptyEntries);
+                if (service.ServiceType.GetCustomAttributes(typeof(PreInitialize), false) == null)
+                    continue;
 
-                if (parts.Length != 2) continue;
+                if (service.ImplementationType == null)
+                    continue;
 
-                Environment.SetEnvironmentVariable(parts[0], parts[1]);
+                _services.GetService(service.ImplementationType);
             }
+            // end
+
+            await _commandService.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
+
+            await masami.LoginAsync(TokenType.Bot, Settings.BotConfig.TOKEN);
+            await masami.StartAsync();
+            await Task.Delay(Timeout.Infinite);
         }
     }
-
-   
 }
-

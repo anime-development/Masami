@@ -3,36 +3,42 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Discord.Commands;
 using Discord.WebSocket;
+using MongoDB.Bson.Serialization.Attributes;
+using static Masami.Masami;
+using MongoDB.Driver;
+using Masami.Database;
+using Masami.Utils;
 using Discord;
 
 namespace Masami.Commands
 {
-    class hello
+    [Group("hello")]
+    public class hello : ModuleBase
     {
-        public static async void Run(DiscordSocketClient client, SocketMessage message, params string[] args)
+        private readonly DiscordSocketClient masami;
+
+        public hello(DiscordSocketClient client)
         {
-            try
+            this.masami = client;
+
+        }
+
+        [Command]
+        public async Task helloAsync()
+        {
+            var data = await RambotAPI.Run("hello", "english");
+
+            if (data.Too_many_requests != null)
             {
-                var text = await Utils.api.Run("hello", "english");
-
-               if(text.Too_many_requests != null)
-                {
-
-                    await message.Channel.SendMessageAsync("ratelimit reached");
-
-                    Console.WriteLine(text.Too_many_requests);
-
-                    return;
-                }
-
-                message.Channel.SendMessageAsync(text.text);
-
+                await Context.Message.ReplyAsync("Ram api ratelimit reached");
+                return;
             }
-            catch (Exception err)
-            {
-                Console.WriteLine(err);
-            }
-        } //                 await message.Channel.SendMessageAsync("Hello how are you");
+
+            ReplyAsync(data.text);
+
+            return;
+        }
     }
 }
