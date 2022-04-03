@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Masami.Utils;
 
 namespace Masami.Events
 {
@@ -14,12 +15,14 @@ namespace Masami.Events
         private readonly CommandService commandService;
         private readonly IServiceProvider serviceProvider;
 
+
         public DiscordMessageEvent(DiscordSocketClient client, CommandService commands, IServiceProvider services)
         {
             client.MessageReceived += Message;
             this.masami = client;
             this.commandService = commands;
             this.serviceProvider = services;
+
 
         }
 
@@ -33,7 +36,7 @@ namespace Masami.Events
             var msg = message as SocketUserMessage;
             var argpos = 0;
 
-            if (!(msg.HasStringPrefix(BotConfig.PREFIX, ref argpos)))
+            if (!(msg.HasStringPrefix(BotConfig.PREFIX, ref argpos) || msg.HasMentionPrefix(masami.CurrentUser, ref argpos)))
                 return;
 
             await message.Channel.TriggerTypingAsync();
@@ -49,23 +52,32 @@ namespace Masami.Events
                 return;
             }
 
+
+
             switch (result.Error)
             {
                 case CommandError.BadArgCount:
                 case CommandError.UnmetPrecondition:
                 case CommandError.Unsuccessful:
 
+
+
                     if (result.Error is CommandError.UnmetPrecondition)
                     {
                         Console.WriteLine(result.ErrorReason);
+
+
+
                         await message.Channel.SendMessageAsync($"Error: {result.ErrorReason}");
                         return;
                     }
                     Console.WriteLine(result.ErrorReason);
+
                     await message.Channel.SendMessageAsync("Error: contact Gamearoo#0001 to repot the error!");
                     break;
                 default:
                     Console.WriteLine(result.ErrorReason);
+
                     break;
             }
         }

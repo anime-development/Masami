@@ -32,6 +32,7 @@ namespace Masami
             Console.Title = "Masami Bot";
             Console.BackgroundColor = ConsoleColor.Green;
             Console.ForegroundColor = ConsoleColor.White;
+            Console.Clear();
 
             BotConfig.Load();
 
@@ -54,6 +55,8 @@ namespace Masami
                 .AddSingleton(_commandService)
                 .AddSingleton(_db)
                 .AddSingleton<DiscordMessageEvent>()
+                .AddSingleton<CommandLogEvent>()
+                .AddSingleton<logs>()
                 .AddSingleton<DiscordReadyEvent>();
 
             _services = collection.BuildServiceProvider();

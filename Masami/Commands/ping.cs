@@ -14,7 +14,7 @@ using Discord;
 
 namespace Masami.Commands_New
 {
-    [Group("ping")]
+
     public class ping : ModuleBase
     {
         private readonly DiscordSocketClient masami;
@@ -26,12 +26,13 @@ namespace Masami.Commands_New
             this.database = db;
         }
 
-        [Command]
+        [Command("ping")]
+        [Summary("Ping Command")]
         public async Task pingAsync()
         {
 
 
-            await Task.Delay(20);
+
 
             var output = new StringBuilder();
 
