@@ -14,6 +14,7 @@ using System.Reflection;
 using Masami.Database;
 using Masami.Events;
 using Masami.Utils;
+using Discord.Interactions;
 
 namespace Masami
 {
@@ -21,7 +22,7 @@ namespace Masami
     {
         private DiscordSocketClient masami = null;
         private IServiceProvider _services = null;
-        private CommandService _commandService = null;
+
         private MongoCRUD _db = null;
 
         public static void Main(string[] args)
@@ -43,18 +44,19 @@ namespace Masami
                 LogLevel = LogSeverity.Info,
                 AlwaysDownloadUsers = true
             });
-            _commandService = new CommandService(new CommandServiceConfig()
+            var commands = new InteractionService(masami, new()
             {
-                CaseSensitiveCommands = false,
-                DefaultRunMode = RunMode.Sync
+                DefaultRunMode = Discord.Interactions.RunMode.Sync,
+                LogLevel = LogSeverity.Info,
+                UseCompiledLambda = true
             });
             _db = new MongoCRUD("masami");
 
             var collection = new ServiceCollection()
                 .AddSingleton(masami)
-                .AddSingleton(_commandService)
+                .AddSingleton(commands)
                 .AddSingleton(_db)
-                .AddSingleton<DiscordMessageEvent>()
+                .AddSingleton<DiscordSlashCommands>()
                 .AddSingleton<CommandLogEvent>()
                 .AddSingleton<logs>()
                 .AddSingleton<DiscordReadyEvent>();
@@ -74,7 +76,8 @@ namespace Masami
             }
             // end
 
-            await _commandService.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
+            await commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
+
 
             await masami.LoginAsync(TokenType.Bot, Settings.BotConfig.TOKEN);
             await masami.StartAsync();

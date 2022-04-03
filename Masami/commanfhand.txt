@@ -1,31 +1,17 @@
-﻿public static async void Run(DiscordSocketClient client, SocketMessage message, params string[] args)
-        {
-            try
-            {
-               //code
+﻿public class hello : InteractionModuleBase
+    {
+        private readonly DiscordSocketClient masami;
 
-            } 
-            catch (Exception err)
-            {
-                Console.WriteLine(err);
-            }
+        public hello(DiscordSocketClient client)
+        {
+            this.masami = client;
+
         }
 
 
+        [SlashCommand("hello", "Gets a hello")]
 
-public class PersonModel
+        public async Task helloAsync()
         {
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-            [BsonId]
-            public string Id { get; set; }
-
-            public string Test { get; set; }
-
-            public string Name { get; set; }
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+            //code here
         }
-
-
-        var user = message.Author as SocketGuildUser;
-
-                var perm = user.GuildPermissions.Has(GuildPermission.ManageGuild);

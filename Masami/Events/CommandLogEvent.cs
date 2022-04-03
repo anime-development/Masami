@@ -1,4 +1,4 @@
-﻿using Discord.Commands;
+﻿using Discord.Interactions;
 using Masami.Utils;
 using System;
 using System.Collections.Generic;
@@ -12,7 +12,7 @@ namespace Masami.Events
     public class CommandLogEvent
     {
         private readonly logs logs;
-        public CommandLogEvent(CommandService commands, logs logged)
+        public CommandLogEvent(InteractionService commands, logs logged)
         {
             commands.Log += Commands_Log;
             this.logs = logged;

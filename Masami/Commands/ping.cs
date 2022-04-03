@@ -10,12 +10,12 @@ using static Masami.Masami;
 using MongoDB.Driver;
 using Masami.Database;
 using Discord;
-
+using Discord.Interactions;
 
 namespace Masami.Commands_New
 {
 
-    public class ping : ModuleBase
+    public class ping : InteractionModuleBase
     {
         private readonly DiscordSocketClient masami;
         private readonly MongoCRUD database;
@@ -26,8 +26,8 @@ namespace Masami.Commands_New
             this.database = db;
         }
 
-        [Command("ping")]
-        [Summary("Ping Command")]
+
+        [SlashCommand("ping", "Gets the bots ping")]
         public async Task pingAsync()
         {
 
@@ -49,7 +49,7 @@ namespace Masami.Commands_New
 
 
 
-            await ReplyAsync(embed: embed.Build());
+            await RespondAsync(embed: embed.Build());
 
             return;
         }

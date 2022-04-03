@@ -11,11 +11,12 @@ using MongoDB.Driver;
 using Masami.Database;
 using Masami.Utils;
 using Discord;
+using Discord.Interactions;
 
 namespace Masami.Commands
 {
-    [Group("hello")]
-    public class hello : ModuleBase
+
+    public class hello : InteractionModuleBase
     {
         private readonly DiscordSocketClient masami;
 
@@ -25,18 +26,20 @@ namespace Masami.Commands
 
         }
 
-        [Command]
+
+        [SlashCommand("hello", "Gets a hello")]
+
         public async Task helloAsync()
         {
             var data = await RambotAPI.Run("hello", "english");
 
             if (data.Too_many_requests != null)
             {
-                await Context.Message.ReplyAsync("Ram api ratelimit reached");
+                await RespondAsync("Ram api ratelimit reached", ephemeral: true);
                 return;
             }
 
-            ReplyAsync(data.text);
+            RespondAsync(data.text);
 
             return;
         }
